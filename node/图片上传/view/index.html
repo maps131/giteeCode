@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.css">
+    <style>
+        .box{
+            height: 400px;
+            width: 800px;
+            border: 1px solid black;
+        }
+        .box img{
+            display:block;
+            max-width:100%;
+        }
+        .small{
+            width: 300px;
+            height: 300px;
+            overflow: hidden;
+            border: 1px solid black;
+        }
+        #previews{
+            width: 500px;
+            height: 500px;
+            border: 1px solid black;
+            overflow: hidden;
+        }
+        #previews li{
+            list-style: none;
+            height: 200px;
+            width: 200px;
+            float: left;
+        }
+        #previews li img{
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h3>单选表单默认上传</h3>
+    <form action="http://localhost:3000/image" method="post" enctype="multipart/form-data">
+        <!-- accept控制选择图片的类型 图片这里接收文件的类型可以是image/* image/jpg .jpeg, .jpg 这类。video/* 限制视频（调用摄像头会直接唤起摄像头录像） audio/* 限制音频
+        capture 使用后置摄像头 capture="user" 使用前置摄像头 经测试，安卓的UC/QQ/vivo自带浏览器，不加此属性，会同时调用相机和相册。加上此属性，只会唤起相机。
+        multiple 多选 -->
+        <input type="file" name="file" accept="image/*"/>
+        <input type="submit" value="上传"/>
+    </form>
+    <h3>单选获取表单的里的信息做提交</h3>
+    <form action="#" method="post" enctype="multipart/form-data" id="formData" >
+        <input type="file" name="file" accept="image/*"/>
+        <input type="button" value="上传" id="uploadBtn"/>
+    </form> 
+    <h3>单选获取input的里的信息，预览和提交</h3>
+    <input type="file" id="img" accept="image/*"/>
+    <input type="button" value="上传" onclick="typeTwo()"/><br>
+    <img width="300" id="preview"><br>
+    <h3>单选预览裁剪提交</h3>
+    <input type="file" id="chooseImg" accept="image/*"/>
+    <input type="button" value="上传" id="upload"/><br>
+    <p>裁剪</p>
+    <div><input type="button" value="重置" id="reset"><input type="button" value="销毁" id="destroy"></div>
+    <div class="box">
+        <img id="image" src="">
+    </div>
+    <p>裁剪预览</p>
+    <div class="small"></div>
+    <h3>多选预览提交</h3>
+    <input type="file" id="imgs" accept="image/*" multiple/>
+    <input type="button" value="上传" onclick="typeFour()"/><br>
+    <ul id="previews">
+        <li><img src="" alt=""></li>
+        <li><img src="" alt=""></li>
+        <li><img src="" alt=""></li>
+        <li><img src="" alt=""></li>
+        <li><img src="" alt=""></li>
+    </ul>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.js"></script>
+    <script>
+        //获取表单的里的信息做提交
+        function typeOne(){
+            $('#uploadBtn').click(()=>{
+                //表单化文件
+                let file = new FormData($('#formData')[0]);
+                $.ajax(
+                    {
+                        url:"http://localhost:3000/image",
+                        method:'post',
+                        data:file,
+                        processData:false,   // tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                        contentType:false,  // tell jQuery not to set contentType
+                        success:function(ret){
+                            console.log(ret)
+                        }
+                    }
+                );
+            })
+        }
+        typeOne()
+        //******************************************************************************************************************************
+        //FileReader预览.返回的base64
+        // function preview(){
+        //     const imgBox = $('#img')
+        //     imgBox.on('change',function(){
+        //         const file = this.files[0],
+        //         reader = new FileReader();
+        //         reader.onload = ()=>{
+        //             console.log(reader.result)
+        //             $('#preview').attr('src',reader.result);
+        //         }
+        //         if(file){
+        //             reader.readAsDataURL(file);
+        //         }
+        //     })
+        // }
+        //URL.createObjectURL预览,返回地址；
+        function preview(){
+            const imgBox = $('#img')
+            imgBox.on('change',function(){
+                const file = this.files[0];
+                // console.log(this.files)
+                // console.log(URL.createObjectURL(file))
+                $('#preview').attr('src',file ? URL.createObjectURL(file) : '');
+                // $('#image').attr('src',file ? URL.createObjectURL(file) : '')
+                // cropper()
+            })
+            
+        }
+        preview()
+        //获取input的里的信息做提交
+        function typeTwo(){
+            var data= new FormData();
+            data.append('user', 'maps');
+            // console.log(document.getElementById('img').files[0])
+            // console.log($("#img")[0].files[0])
+            data.append('file',$("#img")[0].files[0]);
+            $.ajax({
+                url:'http://localhost:3000/image',
+                type:'POST',
+                data:data,
+                processData:false,// tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                contentType:false,   // tell jQuery not to set contentType
+                dataType:'JSON',
+                success: function (ret) {
+                    console.log(ret)
+                }
+            })
+        }
+        //******************************************************************************************************************************
+        // 单选预览裁剪提交
+        function typeThree(prams){
+            var data= new FormData(),
+            name = +new Date+'.png';
+            data.append('user', 'maps');
+            data.append('file',prams,name);
+            $.ajax({
+                url:'http://localhost:3000/image',
+                type:'POST',
+                data:data,
+                processData:false,// tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                contentType:false,   // tell jQuery not to set contentType
+                dataType:'JSON',
+                success: function (ret) {
+                    console.log(ret)
+
+                }
+            })
+        }
+        //预览
+        function previewTwo(){
+            const imgBox = $('#chooseImg'),
+            image = document.getElementById('image');
+            let init = true;
+            imgBox.on('change',function(){
+
+                const file = this.files[0];
+                if(init){
+                    $('#image').attr('src',file ? URL.createObjectURL(file) : '');
+                    cropper(image)
+                    init =false;
+                }else{
+                    image.cropper.replace(URL.createObjectURL(file),false)
+                }
+                
+            })
+            $('#upload').click(function(){
+                // console.log(image.cropper.getCroppedCanvas().toDataURL('image/png'))
+                // $('#preview').attr('src',image.cropper.getCroppedCanvas().toDataURL('image/png'))
+                image.cropper.getCroppedCanvas().toBlob(function(result){//获取裁剪区的canvas并保存成blob数据上传
+                    console.log(result)
+                    typeThree(result)
+                })
+            })
+        }
+        previewTwo()
+        //裁剪
+        function cropper(image){
+            const cropper = new Cropper(image, {
+                aspectRatio:9 / 9,//裁剪比例
+                viewMode:1,//只能裁剪图片范围
+                dragMode:'move',//可以移动图片
+                preview:".small", //预览盒子类名
+                scalable:false,
+                zoomable:false,
+                crop(event) {
+
+                },
+            });
+            $("#reset").on("click", function () {
+                image.cropper.reset();
+            });
+            $("#destroy").on("click", function () {
+                image.cropper.destroy()
+            })
+        }
+        //******************************************************************************************************************************
+        function previews(){
+            const imgBox = $('#imgs');
+            imgBox.on('change',function(){
+                let file = this.files;
+                if(file.length > 3){
+                    this.value = '';
+                    alert('最多选择3张！');
+                    return
+                }
+                for(let i = 0 ;i<file.length;i++){
+                    // console.log(URL.createObjectURL(file[i]))
+                    $('#previews li img').eq(i).attr('src',file[i] ? URL.createObjectURL(file[i]) : '');
+                }
+                // $('#preview').attr('src',file ? URL.createObjectURL(file) : '');
+                // $('#image').attr('src',file ? URL.createObjectURL(file) : '')
+                // cropper()
+            })
+            
+        }
+        previews()
+        //获取input的里的信息做提交
+        function typeFour(){
+            var data= new FormData();
+            //带的其他数据
+            data.append('user', 'maps');
+            //添加所有图片
+            for(let i = 0;i<$("#imgs")[0].files.length;i++){
+                data.append('file',$("#imgs")[0].files[i]);
+            }
+            
+            $.ajax({
+                url:'http://localhost:3000/images',
+                type:'POST',
+                data:data,
+                processData:false,// tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                contentType:false,   // tell jQuery not to set contentType
+                dataType:'JSON',
+                success: function (ret) {
+                    $('#imgs')[0].value = '';
+                    console.log(ret)
+                }
+            })
+        }
+    </script>
+</body>
+</html>

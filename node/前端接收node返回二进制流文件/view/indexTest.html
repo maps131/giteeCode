@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>切片上传和断点续传</title>
+<style>
+    .progressBox{
+        height: 30px;
+        width: 600px;
+        border: 1px solid rgb(0, 130, 216);
+        box-sizing: border-box;
+    }
+    .progressBox div{
+        height: 30px;
+        width: 0%;
+        background: rgb(0, 130, 216);
+        text-align: center;
+        color: black;
+        line-height: 30px;
+        transition: .2s linear;
+    }
+</style>
+</head>
+<body>
+    <div>
+        <input type="file" id="file"/>
+        <button onclick="getNetData()">上传</button>
+    </div>
+    <div style="margin-top: 20px;" class="progressBox">
+        <div></div>
+    </div>
+    <div style="margin-top: 20px;">
+        <button onclick="suspendLoad()">暂停</button>
+        <button>继续</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.0/spark-md5.js"></script>
+    <script>
+        //这里只做单个的文件上传，多个的可以用数组存储对应信息做多文件上传。
+        const chunkSize = 2*1024*1024,//文件切块大小为2MB
+        blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;//不同浏览器的切分
+        progress = $('.progressBox div');//进度条
+
+        let currentFilesIndex = 0,//记录传到哪了以及作为hash命名的尾部
+        fileTotelLength,
+        suspend= 0 ;//是否暂停
+        //启动按钮
+        const getNetData = async () => {
+            let file = $('#file')[0].files[0],
+            fileName = file.name,//合并时的名字
+            filesArray = await chunkFile(file),//切块
+            md5 = await mdFiles(filesArray);//加密
+            startLoad(filesArray,md5,fileName)//上传
+        }
+        //文件分块
+        const chunkFile = (file) => {
+            return new Promise((res,rej)=>{
+                let files = [],
+                    totelSzie = file.size;
+                for(let i = 0 ; i < totelSzie ; i += chunkSize){
+                    let end = (i + chunkSize) > totelSzie ? totelSzie : i + chunkSize;
+                    files.push(blobSlice.call(file,i,(end > totelSzie) ? totelSzie : end));
+                }
+                fileTotelLength = files.length;
+                res(files)
+            })
+        }
+        //块件加密
+        const mdFiles = (files) => {
+            return new Promise((res,rej)=>{
+                let spark = new SparkMD5.ArrayBuffer(),
+                fileReader = new FileReader(),
+                start = 0;
+                //加载
+                function loadFiles(){
+                    fileReader.readAsArrayBuffer(files[start])
+                }
+                //加载是异步，循环加载会报忙碌的错误。
+                fileReader.onload = function(e) {
+                    spark.append(e.target.result);  
+                    start++;
+                    if (start >= files.length) {        
+                        //做文件内容相同，不同名字处理
+                        // const sparkMd5 = new SparkMD5();
+                        // sparkMd5.append(spark.end());
+                        // sparkMd5.append('filename'); 
+                        // return sparkMd5.end()
+                        // console.log(spark.end())
+                        // res(spark.end())
+                        return res(spark.end())
+                        // return
+                    }
+                    loadFiles()
+
+                }
+                //加载出错
+                fileReader.onerror = function (){
+                    rej('文件读取失败！')
+                };
+                //开启加载
+                loadFiles()
+            })
+        }
+        //上传
+        const upLoad = (fileData,index,hash) => {
+            return new Promise((res,rej)=>{
+                let data= new FormData();
+                data.append('hash',hash)
+                data.append('index',index);
+                data.append('file',fileData);
+                $.ajax({
+                    url:'http://localhost:3000/file',
+                    type:'POST',
+                    data:data,
+                    processData:false,// tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                    contentType:false,   // tell jQuery not to set contentType
+                    dataType:'JSON',
+                    success: function (ret) {
+                        currentFilesIndex++
+                        viewStatus(currentFilesIndex)
+                        res()
+                    },
+                    error:function (err){
+                        rej(err)
+                    }
+                })
+            })
+        }
+        //开始上传
+        const startLoad = (files,hash,name) => {
+            upLoad(files.shift(),currentFilesIndex,hash)
+            .then(() => {nextLoad(files,hash,name)})
+        }
+        //调度函数
+        const nextLoad = (files,hash,name) => {
+            if(suspend){
+                return
+            };
+            if(files.length){
+                startLoad(files,hash,name)
+            }else{
+                progress.text('合并中...');
+                mergeFile(hash,name)
+            }
+        }
+        //合并切片请求
+        const mergeFile = (hash,name) =>{
+            $.ajax({
+                url:'http://localhost:3000/file',
+                type:'GET',
+                data:{hash:hash,name:name},
+                success: function (ret) {
+                    progress.text('上传成功');
+                    currentFilesIndex = 0;
+                },
+                error:function (){
+                    alert('请求失败，请稍后再试！')
+                }
+            })
+        }
+        //进度条
+        const viewStatus = (pro) => {
+            let temp = Math.ceil(pro/fileTotelLength*100)+'%'
+            progress.css('width',temp).text(temp);
+        }
+        //暂停上传
+        const suspendLoad = () => {
+            suspend = 1;
+            console.log(currentFilesIndex)
+        }
+        //继续上传
+        const continueLoad = () => {
+            if(suspend){
+                nextLoad()
+            }
+        }
+    </script>
+</body>
+
+</html>

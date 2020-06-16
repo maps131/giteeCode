@@ -1,0 +1,8 @@
+1.下载yarn	yarn,速度快、安装版本统一、更安全、简洁的输出、更好的语义
+2.基本命令
+	>	yarn init	初始化
+	>	yarn add	安装包
+	>	yarn remove	删除
+	>	yarn\yarn install	安装所有依赖
+	>	yarn install --force	强制重新下载所有包
+	>	yarn install --production	只安装生产依赖关系

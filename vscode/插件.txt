@@ -1,0 +1,22 @@
+Python		提供了代码分析，高亮，规范化等很多基本功能
+vscode-icons	各种漂亮图标
+filesize	左下角显示文件大小的插件
+Bracket Pair Colorizer		成对的彩色括号
+Atom-Material		一款安卓风的颜色主题，推荐使用推荐的字体设置。
+Import Cost		在行尾显示导入的包的大小
+Indent-Rainbow		带颜色的缩进
+GitLens		能显示每一行代码的作者以及提交时间。
+Quokka.js	实时执行 JavaScript 代码(做快速的 demo 很有用)
+Code Runner	立刻运行代码
+Vetur		Vue 工具插件
+Live server	实时显示网页情况
+Python indent		自动纠正 Python 缩进
+vscode-fileheader	头部注释添加/更新插件
+TODO Highlight		高亮显示备注中的 TODO 事项，推荐配合Todo Tree 使用
+Todo Tree	点击左侧栏“树”的logo，显示 TODOList 条目，点击相应的条目，可以打开文件并定位到 TODO 行。
+Auto Close Tag		自动写关闭标签的插件
+Auto Rename Tag		自动重命名关闭标签
+Guides		比 VS Code自带的更好的参考线，可自定义
+Color Info	显示css中的颜色属性信息
+Regex Previewer		正则结果预览插件
+ESlint		自动代码规则

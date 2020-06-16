@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.css"> -->
+    <style>
+        .progressBox{
+            width: 600px;
+            height: 22px;
+            border: 1px solid black;
+            box-sizing: border-box;
+        }
+        .progressBox div{
+            background: black;
+            text-align: center;
+            color: white;
+            height: 20px;
+            width: 0%;
+            /* padding: ; */
+        }
+    </style>
+</head>
+<body>
+    <h3>上传文件夹</h3>
+    <input type="file" id="file" webkitdirectory/>
+    <input type="button" value="上传" onclick="start()"/><br>
+    <img width="300" id="preview"><br>
+    <div class="progressBox">
+        <div class="progress"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.js"></script> -->
+    <script>
+        //获取input的里的信息做提交
+        let files,
+        progressNum = 0;
+        $('#file').on("change",function(){
+            files = this.files;
+        });
+        //上传
+        function upload(fileData){
+            return new Promise((res,rej)=>{
+                let data= new FormData();
+                data.append('file',fileData)
+                // console.log(data)
+                $.ajax({
+                    url:'http://localhost:3000/file',
+                    type:'POST',
+                    data:data,
+                    processData:false,// tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                    contentType:false,   // tell jQuery not to set contentType
+                    dataType:'JSON',
+                    success: function (ret) {
+                        // console.log(fileData)
+                        progressNum++
+                        progress(progressNum,files.length)
+                        res()
+                    },
+                    error:function (){
+                        alert('请求失败，请稍后再试！')
+                    }
+                })
+            })
+        };
+        //赛跑方式上传，将所有文件每9个分一组，哪组先上传完，后面一组补到这个位置，继续赛跑，直到没候补
+        function raceLoad(allFiles,upload,limited){
+            // console.log(allFiles)
+            //存储pending
+            let racePending = [],
+            //记录该传谁了
+            currentIndex = 0;
+            //并发请求到限制数
+            for(let i = 0 ; i < limited ; i++ ){
+                racePending.push(upload(allFiles[currentIndex]).then(()=>{
+                    return i
+                }));
+                currentIndex++;
+            }
+
+            (async function loop(){
+                let tempPromise = Promise.race(racePending);
+                for(let j = 0 ; j < (allFiles.length-limited) ; j++){
+                    tempPromise = tempPromise.then((res)=>{
+                        racePending[res] = upload(allFiles[currentIndex]).then(()=>{
+                            return res
+                        })
+                        
+                        currentIndex++;
+                        return Promise.race(racePending)
+                    })
+                }
+            })()
+        };
+        function progress(param,all){
+            const box = $('.progress'),
+            tempNum = param/all*100;
+            box.css('width',tempNum+'%').text(Math.ceil(tempNum)+'%')
+
+        };
+        function start(){
+            raceLoad(files,upload,3)
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+VS Code 中使用
+	>	npm i -g typescript	安装ts
+	>	tsc -init	初始化文件夹，生成tsconfig.json文件，
+				（target为何种规范一般es5、outdir编译后输出的文件目录、alwaysStrict打开严格模式）
+	>	tsc ts文件名	编译ts到当前目录
+	>	vscode-终端-运行任务-	输入	tsc:构建 - ts/tsconfig.json	编译ts
+						tsc:监视 - ts/tsconfig.json	自动编译ts
+	>	

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        class DataSource {
+            constructor() {
+                let i = 0;
+                this._id = setInterval(() => this.emit(i++), 200);               
+            }   
+            emit(n) {
+                const limit = 10;
+                if (this.ondata) {
+                    // console.log(this.ondata)
+                    this.ondata(n);
+                }
+                if (n === limit) {
+                    if (this.oncomplete) {
+                        this.oncomplete();
+                    }
+                    this.destroy();
+                }
+            }
+            
+            destroy() {
+                clearInterval(this._id);
+            }
+        }
+
+            /**
+            * Safe Observer
+            */
+        class SafeObserver {
+            constructor(destination) {
+                this.destination = destination;
+            }
+            
+            next(value) {
+                // only try to next if you're subscribed have a handler
+                if (!this.isUnsubscribed && this.destination.next) {
+                    try {
+                        this.destination.next(value);
+                    } catch (err) {
+                        // if the provided handler errors, teardown resources, then throw
+                        this.unsubscribe();
+                        throw err;
+                    }
+                }
+            }
+            
+            error(err) {
+                // only try to emit error if you're subscribed and have a handler
+                if (!this.isUnsubscribed && this.destination.error) {
+                    try {
+                        this.destination.error(err);
+                    } catch (err) {
+                        // if the provided handler errors, teardown resources, then throw
+                        this.unsubscribe();
+                        throw err;
+                    }
+                    this.unsubscribe();
+                }
+            }
+
+            complete() {
+                // only try to emit completion if you're subscribed and have a handler
+                if (!this.isUnsubscribed && this.destination.complete) {
+                    try {
+                        this.destination.complete();
+                    } catch (err) {
+                        // if the provided handler errors, teardown resources, then throw
+                        this.unsubscribe();
+                        throw err;
+                    }
+                    this.unsubscribe();
+                }
+            }
+            
+            unsubscribe() {
+                this.isUnsubscribed = true;
+                if (this.unsub) {
+                    this.unsub();
+                }
+            }
+        }
+            /**
+            * Observable basic implementation
+            */
+        class Observable {
+            constructor(_subscribe) {
+                this._subscribe = _subscribe;
+            }; 
+            subscribe(observer) {
+                // debugger
+                // console.log(this._subscribe)
+                const safeObserver = new SafeObserver(observer);
+                safeObserver.unsub = this._subscribe(safeObserver);
+                // debugger
+                // console.log(safeObserver.unsub)
+                return safeObserver.unsubscribe.bind(safeObserver);
+            }
+        }
+
+        Observable.prototype.map = function (project) {
+            return new Observable((observer) => {
+                const mapObserver = {
+                    next: (x) => observer.next(project(x)),
+                    error: (err) => observer.error(err),
+                    complete: () => observer.complete()
+                };
+                return this.subscribe(mapObserver);
+            });
+        };
+        /**
+        * map operator
+        */
+        // function map(source, project) {
+        //     return new Observable((observer) => {
+        //         const mapObserver = {
+        //             next: (x) => {observer.next(project(x));},
+        //             error: (err) => observer.error(err),
+        //             complete: () => observer.complete()
+        //         };
+        //         // console.log(mapObserver)
+        //         //执行的是这句
+        //         // debugger
+        //         return source.subscribe(mapObserver);
+        //     });
+        // }
+        /**
+        * our observable
+        */
+        const myObservable = new Observable((observer) => {
+            // debugger
+            // console.log(111)
+            const datasource = new DataSource();
+            datasource.ondata = (e) => {observer.next(e);};
+            datasource.onerror = (err) => observer.er1ror(err);
+            datasource.oncomplete = () => observer.complete();
+            return () => datasource.destroy();
+        });
+        // console.log(myObservable._subscribe)
+        // myObservable.subscribe()
+        /**
+ * now let's use it
+ */     
+        // console.log(myObservable)
+        // const unsub = map(map(myObservable, (x) => x+x), (x) => x + 2);
+        const unsub = myObservable.map(x => x + x).map(x => x + 2).subscribe({
+            next(x) { console.log(x); },
+            error(err) { console.error(err); },
+            complete() { console.log('done')}
+        });;
+
+        // console.log(unsub._subscribe)
+
+
+/**
+ * uncomment to try out unsubscription
+ */
+// setTimeout(unsub, 500);
+    </script>
+</body>
+</html>

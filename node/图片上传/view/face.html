@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .preview-image,
+        .cropper-image {
+            max-width: 100%;
+        }
+
+        .cropper {
+            display: none;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: #ccc;
+            font-size: 0.27rem;
+            text-align: center;
+        }
+
+        .inner {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .face-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 50px auto;
+        }
+
+        .cropper-modal {
+            background: url('https://ok.166.net/gameyw-misc/opd/squash/20191028/152551-m37snfsyu1.png') center no-repeat;
+            background-size: 100% 100%;
+            opacity: 1;
+        }
+
+        .cropper-bg {
+            background: none;
+        }
+
+        .cropper-view-box {
+            opacity: 0;
+        }
+
+        .tips {
+            font-size: 16px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            margin: 50px 0;
+        }
+
+        .btn {
+            width: 150px;
+            line-height: 40px;
+            font-size: 20px;
+            text-align: center;
+            color: #fff;
+            background: #007fff;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <input id="inputFile" type="file" accept="image/*">
+    <img class="preview-image" id="previewImage" src="" alt="">
+    <!-- cropper裁剪框 -->
+    <div class="cropper" id="cropper">
+        <div class="inner">
+            <div class="face-container">
+                <img class="cropper-image" id="cropperImage">
+            </div>
+            <div class="tips">请将面部区域置于人脸框架内</div>
+            <div class="toolbar">
+                <div class="btn" id="confirm">确认</div>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.js"></script>
+    <script>
+        const $ = document.getElementById.bind(document);
+        const $cropper = $('cropper');
+        const $inputFile = $('inputFile');
+        const $previewImage = $('previewImage');
+        const $cropperImage = $('cropperImage');
+        const $confirmBtn = $('confirm')
+        let cropperInstance = null;
+
+        // 选择图片后，显示图片裁剪框
+        $inputFile.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            $cropperImage.src = URL.createObjectURL(file);
+            showCropper();
+        }, false);
+
+        // 点击确认按钮，将裁剪好的图片放到 img 标签显示。
+        $confirmBtn.addEventListener('click', function () {
+            const url = cropperInstance.getCroppedCanvas().toDataURL("image/jpeg", 1.0);
+            $cropper.style.display = 'none';
+            $previewImage.src = url;
+        }, false);
+
+
+        function showCropper() {
+            $cropper.style.display = 'block';
+            cropperInstance && cropperInstance.destroy();
+            cropperInstance = new Cropper($cropperImage, {
+                viewMode: 1,
+                aspectRatio: 1,
+                autoCropArea: 1,
+                dragMode: 'move',
+                guides: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>切片上传</title>
+</head>
+<body>
+        <input type="file" id="file" multiple/>
+
+        <button onclick="upLoad()">上传</button>
+    <div>
+        试了用websocket来传输，但遇到以下问题：<br>
+        1.传输的数据类型有限，只能是string,Blob,ArrayBuffer。<br>
+        2.无法传输两个参数<br>
+        3.Blob、文件传过来直接在buffer存储二进制文件数据，读取不到其它信息<br>
+        以上问题导致无法确定是谁传输了文件,传了什么文件。<br>
+        * 有兴趣的可以运行app.js试下传输类型
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+
+        let getFile = $('#file'),
+        files,
+        a = 1;
+        getFile.on('change',function(){
+            files = this.files[0];
+        })
+        //下载
+        const upLoad = () => {
+            
+            // 打开一个 web socket
+            var wst = new WebSocket("ws://localhost:3000/test");
+            
+            wst.onopen = function()
+            {
+                // Web Socket 已连接上，使用 send() 方法发送数据
+                wst.send("test.zip");
+            };
+            
+            wst.onmessage = function (evt) 
+            { 
+                let received_msg = evt.data;
+                console.log(evt.data)
+                if(a == 1){
+                    a = 0;
+                    // var reader = new FileReader();
+                    // reader.readAsArrayBuffer(files);
+                    // reader.onload = function(e) {
+                        // wst.send(e.target.result)
+                    // }
+                    wst.send(files);
+                }
+            };
+            
+            wst.onclose = function()
+            { 
+                // 关闭 websocket
+                console.log("连接已关闭..."); 
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+index.js	
+	> Router.js
+		> App.js
+		 	> main.js
+		> otherRouter.js	>>其他路由组件虽然是main的字组件，但是在Router里用路由加载
+				> mainChild.js	
+					
+index.js
+	> Router.js
+		> App.js
+			> main.js
+		> otherRouter.js
+			> mainChild.js	

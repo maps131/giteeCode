@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Marked in the browser</title>
+<script src="js/marked.js"></script>
+<link rel="stylesheet" href="https://cdn.bootcss.com/github-markdown-css/3.0.1/github-markdown.css">
+<link rel="stylesheet" href="css/default.min.css">
+<script src="js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<style type="text/css">
+    body{
+        background: rgb(240, 240, 240);
+        padding: 0;
+        margin: 0;
+    }
+    #editBox{
+        width: 50%;
+        height: 800px;
+        /* background: rgb(53, 53, 53); */
+        float: left;
+        /* color: wheat; */
+    }
+    #editBox #edit_txt{
+        width: 100%;
+        height: 800px;
+        background: rgb(53, 53, 53);
+        /* float: left; */
+        color: rgb(247, 218, 166);
+        font-family:'Microsoft JhengHei';
+        font-size: 16px;
+        padding: 0;
+        border: 0;
+    }
+    #previewBox{
+        margin-left: .5%;
+        width: 49.5%;
+        height: 800px;
+        background: white;
+        float: left;
+        padding: 0 !important;
+        /* overflow-y: scroll; */
+    }
+</style>
+</head>
+<body>
+    <div>
+        <input type="file" id="file"/>
+        <button onclick="getNetData()">上传</button>
+        <button onclick="downLoad()">下载</button>
+    </div>
+    <div id="editBox">
+        <textarea name="edit" id="edit_txt"></textarea>
+    </div>
+    <div id="previewBox" class="markdown-body">
+
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+        let rendererMD = new marked.Renderer(),
+            txt = document.getElementById('edit_txt'),
+            result = document.getElementById('previewBox');
+        marked.setOptions({
+            renderer: rendererMD,
+            // 高亮配置
+            highlight: function (code) {
+                return hljs.highlightAuto(code).value;
+            },
+            gfm: true,
+            tables: true,
+            breaks: false,
+            pedantic: false,
+            sanitize: false,
+            smartLists: true,
+            smartypants: false
+        });
+        //编辑
+        
+        window.onload = function() {
+            txt.onkeyup = function(e) {
+                //tab按钮空4格
+                if (e.keyCode == 9) {
+                    if (e.preventDefault) {
+                        e.preventDefault();
+
+                    }else {
+                        e.returnValue = false;
+                    }
+                    document.execCommand('insertText', false, ' '.repeat(4));
+                }
+
+                result.innerHTML = marked(e.target.value);
+            }
+            //读取显示
+            function readMd(){
+                let mdFile = document.getElementById('file');
+                mdFile.onchange = function(){
+                    fileReader = new FileReader();
+                    fileReader.readAsText(mdFile.files[0])
+                    fileReader.onload = function(){
+                        console.log(fileReader.result)
+                        txt.value = fileReader.result;
+                        result.innerHTML = marked(txt.value);
+                    }
+                }
+            }
+            // readMd()
+
+        }
+
+        //请求上传md文本返回内容
+        function getNetData(){
+            let data= new FormData(),
+            mdFile = document.getElementById('file');
+            console.log(mdFile.files[0])
+            data.append('file',mdFile.files[0]);
+            $.ajax({
+                url:'http://localhost:3000/file',
+                type:'POST',
+                data:data,
+                processData:false,// tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                contentType:false,   // tell jQuery not to set contentType
+                dataType:'JSON',
+                success: function (ret) {
+                    txt.value = ret.mdData;
+                    result.innerHTML = marked(txt.value);
+                }
+            })
+        }
+
+        //导出md文档
+        function exportMd(filename, text) {
+            let element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            
+            element.click();
+            
+            document.body.removeChild(element);
+        }
+        //下载
+        function downLoad(){
+            exportMd("index.md",txt.value);
+        }
+        
+    </script>
+</body>
+
+</html>

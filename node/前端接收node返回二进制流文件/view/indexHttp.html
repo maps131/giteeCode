@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>切片上传</title>
+    <style>
+        li{
+            list-style: none;
+            border: olivedrab 1px solid;
+            padding: 20px;
+            width: 700px;
+            margin-top: 10px;
+        }
+        li .progressBox{
+            width: 600px;
+            height: 30px;
+            border: olivedrab 1px solid;
+        }
+        li .progressBox div{
+            width: 0%;
+            height: 30px;
+            background: olivedrab;
+            text-align: center;
+            line-height: 30px;
+        }
+        li button{
+            margin: 20px 20px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div style="padding-left:40px;">
+        <input type="file" id="file" multiple/>
+    </div>
+    <ul></ul>
+    <div style="padding-left:40px;">
+        <button onclick="downLoad()">下载</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.0/spark-md5.js"></script>
+    <script>
+        const chunkSize = 2*1024*1024,//文件切块大小为2MB，所以限定了最小文件，可以改。
+        blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,//不同浏览器的文件切分
+        ulBox = $('body ul');
+
+        let getFile = $('#file'),
+        upLoadFileName;
+        getFile.on('change',function(){
+            //创建选择文件的上传盒子
+            for(let i = 0 ; i < this.files.length ;i++){
+                let files = this.files[i];
+                upLoadFileName = files.name;
+                if(files.size < chunkSize){
+                    alert('请选择大于2MB的文件')
+                    break
+                }
+                new UploadFile(files)
+            }  
+        })
+
+        class UploadFile{
+            constructor(file){
+                this.file = file;//本地的文件
+                this.files = [];//切片文件
+                this.fileLength = 1;//切片长度
+                this.fileName = file.name;//文件名称，
+                this.hash;//文件哈希值
+                this.currentFileIndex = 0;//当前传送的位置
+                this.suspend = 0;//是否暂停
+                this.liName; //需要操作的li
+                this.upLoadBtn;//上传按钮
+                this.suspendBtn;//暂停按钮
+                this.progress;//进度条
+                this.View();//初始化文件盒子
+            }
+            //生成上传界面
+            View (){
+                const sparkMd5 = new SparkMD5();
+                sparkMd5.append(this.fileName); 
+                this.liName = sparkMd5.end();//创建文件盒子专属名字
+                ulBox.append(`<li class="file${this.liName}">
+                    <p>${this.fileName}</p>
+                    <div class="progressBox"><div></div></div>
+                    <button>暂停</button>
+                    <button>上传</button>
+                </li>`)
+                this.suspendBtn = $(`.file${this.liName} button`).eq(0);
+                this.upLoadBtn = $(`.file${this.liName} button`).eq(1);
+                this.progress = $(`.file${this.liName} .progressBox`).find('div');
+                this.suspendBtn.click(()=>{
+                    this.suspendLoad()//暂停
+                })
+                this.upLoadBtn.click(()=>{
+                    this.upLoadBtn.hide();
+                    this.getNetData()//开始上传
+                })
+            }
+            //启动按钮
+            getNetData = async () => {
+                await this.chunkFile(this.file);//切块
+                await this.mdFiles(this);//加密
+                this.startLoad()//上传
+            }
+            //文件切块
+            chunkFile (){
+                //返回promise,用来配合async，await。处理异步
+                return new Promise((res,rej)=>{
+                    let files = [],
+                        totelSzie = this.file.size;
+                    for(let i = 0 ; i < totelSzie ; i += chunkSize){
+                        let end = (i + chunkSize) > totelSzie ? totelSzie : i + chunkSize;
+                        files.push(blobSlice.call(this.file,i,(end > totelSzie) ? totelSzie : end));//切
+                    }
+                    this.fileLength = files.length;
+                    this.files = [].concat(files);
+                    res()
+                })
+            }
+            //快件加密
+            mdFiles (that){
+                return new Promise((res,rej)=>{
+                    let spark = new SparkMD5.ArrayBuffer(),
+                    fileReader = new FileReader(),
+                    start = 0;
+                    //加载
+                    function loadFiles(){
+                        fileReader.readAsArrayBuffer(that.files[start])
+                    }
+                    //加载是异步，循环加载会报忙碌的错误,需要onload后再加载。
+                    fileReader.onload = function(e) {
+                        spark.append(e.target.result);//添加加密内容  
+                        start++;
+                        if (start >= that.fileLength) {        
+                            //做文件内容相同，不同名字处理
+                            // const sparkMd5 = new SparkMD5();
+                            // sparkMd5.append(spark.end());
+                            // sparkMd5.append('filename'); 
+                            // return sparkMd5.end()
+                            // console.log(spark.end())
+                            // res(spark.end())
+                            that.hash = spark.end()
+                            return res()
+                        }
+                        loadFiles()
+
+                    }
+                    //加载出错
+                    fileReader.onerror = function (){
+                        rej('文件读取失败！')
+                    };
+                    //开启加载
+                    loadFiles()
+                })
+            }
+            //上传请求
+            upLoad (fileData,that){
+                return new Promise((res,rej)=>{
+                    let data= new FormData();
+                    data.append('hash',that.hash)//传hash，用来判断是否上传过和创建文件夹
+                    data.append('index',that.currentFileIndex);//用来命名
+                    data.append('file',fileData);
+                    $.ajax({
+                        url:'http://localhost:3000/file',
+                        type:'POST',
+                        data:data,
+                        processData:false,// tell jQuery not to process the data  默认情况下jquary会对数据做处理
+                        contentType:false,   // tell jQuery not to set contentType
+                        dataType:'JSON',
+                        success: function (ret) {
+                            that.currentFileIndex++
+                            that.viewStatus(that.currentFileIndex)//进度条
+                            res()
+                        },
+                        error:function (err){
+                            rej(err)
+                        }
+                    })
+                })
+            }
+            //开始上传
+            startLoad = async () => {
+                if(!this.currentFileIndex){
+                    await this.checkStatus(this)//判断有没有上传过，返回上传了多少
+                }
+                this.upLoad(this.files.shift(),this)//获取当前要上传的块
+                .then(() => {this.nextLoad()})//调度
+            }
+            //调度函数
+            nextLoad (){
+                //是否暂停
+                if(this.suspend){
+                    return
+                };
+                //还有块继续上传
+                if(this.files.length){
+                    this.startLoad()
+                }else{
+                    this.progress.text('合并中...');
+                    this.mergeFile(this)
+                }
+            }
+            //合并切片请求
+            mergeFile (that){
+                $.ajax({
+                    url:'http://localhost:3000/file',
+                    type:'GET',
+                    data:{hash:that.hash,name:that.fileName},
+                    success: function (ret) {
+                        that.progress.text('上传成功');
+                        that.currentFileIndex = 0;
+                    },
+                    error:function (){
+                        alert('请求失败，请稍后再试！')
+                    }
+                })
+            }
+            //进度条
+            viewStatus (pro){
+                let temp = Math.ceil(pro/this.fileLength*100)+'%'
+                this.progress.css('width',temp).text(temp);
+            }
+            //暂停继续上传
+            suspendLoad (){
+                if(!this.suspend && this.currentFileIndex > 0){
+                    this.suspend = 1;
+                    this.suspendBtn.text('继续')
+                }else if(this.currentFileIndex > 0){
+                    this.suspend = 0;
+                    this.suspendBtn.text('暂停')
+                    this.nextLoad();
+                }
+            }
+            //查询之前是否上传过
+            checkStatus (that){
+                return new Promise((res,rej)=>{
+                    $.ajax({
+                        url:'http://localhost:3000/check',
+                        type:'GET',
+                        data:{hash:that.hash},
+                        success: function (data) {
+                            that.currentFileIndex = data.ret;
+                            that.files.splice(0,data.ret)
+                            res()
+                        },
+                        error:function (){
+                            alert('请求失败，请稍后再试！')
+                        }
+                    })
+                })
+                
+            }
+        }
+        //下载
+        const downLoad = () => {
+            // const xhr = new XMLHttpRequest();
+            // let url = 'http://localhost:3000/download?filename='+upLoadFileName;    
+            // xhr.open("get",url,true)
+            // xhr.responseType = "arraybuffer";
+            // xhr.onload = function() {
+            //     if (this.status == 200 && this.readyState == 4) {
+            //         let blob = new Blob([this.response],{type: 'application/x-zip-compressed'}),
+            //         fileName = xhr.getResponseHeader('Content-Filename');
+            //         downUrl = window.URL || window.webkitURL,
+            //         objectUrl = downUrl.createObjectURL(blob);
+            //         if (fileName) {
+            //             const a = document.createElement('a')
+            //             if (typeof a.download === 'undefined') {
+            //                 window.location = objectUrl
+            //             } else {
+            //                 a.href = objectUrl
+            //                 a.download = fileName
+            //                 document.body.appendChild(a)
+            //                 a.click()
+            //                 a.remove();
+            //                 console.log('获取成功，等待下载！')
+            //             }
+            //         } else {
+            //             window.location = objectUrl
+            //         }
+            // }};
+            // xhr.send();
+            $.ajax({
+                url:'http://localhost:3000/download',
+                type:'GET',
+                xhrFields:{responseType:'arraybuffer'},//接收的文件类型
+                data:{filename:upLoadFileName},//要下载的文件名，后台没这个文件记得先上传。断点上传代码在上面
+                success: function (data,status,xhr) {
+                    
+                    let blob = new Blob([data],{type: 'application/octet-stream'}),//获取到二进制文件流，保存为Blob对象
+                    fileName = xhr.getResponseHeader('Content-Filename');//回复的请求头拿到文件名，这个得后台配合。我这是node里加了
+                    
+                    //基操，下载文件
+                    if(typeof window.navigator.msSaveBlob !== 'undefined') {//兼容ie
+                        window.navigator.msSaveBlob(blob, fileName);
+                    }else {
+                        let URL = window.URL || window.webkitURL
+                        let objectUrl = URL.createObjectURL(blob)
+                        if (fileName) {
+                            var a = document.createElement('a')
+                            if (typeof a.download === 'undefined') {
+                                window.location = objectUrl
+                            } else {
+                                a.href = objectUrl
+                                a.download = fileName
+                                document.body.appendChild(a)
+                                a.click()
+                                a.remove();
+                                alert('获取成功，等待下载完成')
+                            }
+                        }else {
+                            window.location = objectUrl
+                        }
+                    }
+                },
+                error:function (){
+                    alert('请求失败，请稍后再试！')
+                }
+            }) 
+        }
+    </script>
+</body>
+</html>

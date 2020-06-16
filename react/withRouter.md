@@ -1,0 +1,1 @@
+# 让普通组件可以用到路由组件的参数{history,location,state}

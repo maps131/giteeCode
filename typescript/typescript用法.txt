@@ -1,0 +1,151 @@
+原始数据类型
+	>	string
+	>	number
+	>	boolean
+	>	null
+	>	undefined
+	>	enum	元组
+	>	symbol	枚举
+	>	viod	空值，可表示变量也可以是函数返回值
+	>	any	任意值
+联合类型声明
+	>	let date:string|number = "1"	可以是数字和字符串	联合类型
+定义接口
+	>	interface	objectName{	>>	定义的元素必须有，且类型得一致
+			name:string,	
+			age?:num,		>>	跟问号代表可有可无
+			readonly hobe:num		>>	只读属性，不能更改
+			[proName:string]:any	>>	属性个数不确定时，但必须时any类型；你带啥元素类型都ok，
+		}
+数组类型
+	>	var arr:number [] =[1,2,3]	>>单一类型数组
+	>	var arr:any [] = [1,"数字"，true]		>>任意类型数组
+	>	var arrType: Array<number> = [1,2,3]		>>单一数组泛型表示法
+	>	var arrType: Array<any> = [1,"数字"，true]
+	>	interface IArr{
+			[index:number]:number
+		}
+		var arrType:IArr = [1,2,3]	>>单一数组接口表示法
+	>	interface Istate{
+			username:string,
+			age:number
+		}
+		interface IArr{
+			[index:number]:Istate
+		}
+		var arrType:IArr = [{username:"老王"}，age:10]	>>对象元素数组接口表示法
+	>	var arrType: Array<Istate> = [{username:"老王"}，age:10]	>>对象素组泛型接口表示法
+	>	var arrType: Istate [] = [{username:"老王"}，age:10]		>>对象数组接口表示法
+声明式类型的函数
+	>	function funType(name:string,age:number,sex?:string,hobe:string="ball"):number{
+			retrun age;	
+		}
+		var data:number =  funType('老去',2,'男')		>>sex可有可无，hobe不写有默认ball
+表达式类型的函数
+	>	var nameFunc = function(name:string,age:number):viod{	>>普通式
+			
+		}
+	>	var nameFunc:(name:string,age:number)=>void =  function(name:string,age:number):viod{
+								>>双关式
+		}
+	>	interface propsType{
+			(name:string,age:number):void
+		}
+		var nameFunc:propstype = function(name:string,age:number):viod{	>>双关接口式
+		
+		}	
+	>	function getValue(value:number):number;		>>函数重载
+		function getValue(value:string):string;
+		function getValue(value:number|string):number|string{
+			renturn value
+		}
+		let a:number = getValue(1);
+		let a:string = getValue("1");
+类型断言
+	>	function getValue(value:number|string):number|string{
+			return (<string>value).length;		>>react jsx不能用
+			return (name as string).length		>>只能断言不能转换
+		}
+类型别名
+	>	type strType = string|number|boolean;	>>基本变量别名
+		var str:strType = "10"
+		str = 10
+		str = true
+	>	interface muchType1{	>>用于接口类型
+			name;tring
+		}
+		interfasce muchType2{
+			age:number
+		}
+		type muchtype = muchType1 | muchType2
+		var obj:muchType = {name:'laowang'}
+		var obj2:muchType = {age:10}
+		var obj3:muchType = {name:'laowang',age:10}
+	>	type sex = "男" | "女"；
+		function getSex(s:sex):string{
+			return s
+		}
+		getSex("男")	>>	s只能式"男"和"女"
+枚举
+	>	enum Days{ Sun, Mon, Tue, Wed, Thu, Fri, Sat}	>>有双向映射
+							>>Days.Sun = 0;
+							>>Days[0] === "Sun"
+	>	enum Days{ Sun = 9, Mon, Tue, Wed, Thu, Fri, Sat}		>>Days.Sun = 9
+								>>Days.Mon = 10
+类的修饰符
+	>	public	>>公共的,在类里面声明时作前缀
+	>	private	>>只能在类的里面使用
+	>	proteced		>>只能在子类里面使用，外面不行
+泛型
+	>	function createArry<T>(length:number,value:T):Array<T>{	>>泛型可以约束规范
+			let arr = [];
+			for(var i=0;i<length;i++){
+				arr[i] = value
+			}
+			return arr
+		}
+		var strArray:string [] = createArry<string>(3,"1")		
+		var strArray:string [] = createArry(3,"1")		>>不规定T类型时反推，为string
+	>	interface ICreate{
+			<T>(name:string,value:T):Array<T>
+		}
+
+		let func: ICreate = function<T>(name:string,value:T):Array<T>{
+			return [];
+		}
+		var strArr :string []= func("zhangshan","str")
+ts应用
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
