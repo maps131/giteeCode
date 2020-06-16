@@ -10,108 +10,94 @@
 <meta content="telephone=no" name="format-detection" />
 <title>新年月度签到礼</title>
 <style>
+body,html{margin: 0;padding: 0;}
 .box{width: 1200px;height: auto;margin: 0 auto;background-color: rgb(235, 235, 235);}
+.titleBox{height: 120px;width: 100%;}
 h1{text-align: center;}
 button{height: 30px;width: 80px;border-radius: 15px;background-color: darkorange;}
-.imgBox{width: 100%;height: 1550px;overflow: hidden;}
+.imgBox{width: 100%;height: 1585.5px;overflow: hidden;}
 .imgBox img{max-width: 100%;}
+.status2{height: 1705.5px;}
 </style>
 </head>
 <body>
 	<div class="box">
-		<button class="dwonload">DwonLoad</button>
-		<input type="file" class="upload"></input>
-		<h1>周报打包工具</h1>
+		<div class="titleBox">
+			<button class="dwonload">DwonLoad</button>
+			<h1>周报打包工具</h1>
+		</div>
 		<div class="imgBox">
-			<img src="./img/award01.png" alt="">
-			<img src="./img/back.png" alt="">
-			<img src="./img/cover.png" alt="">
-			<img src="./img/递四方速递 (1).jpg" alt="" >
-			<img src="./img/btns2.png">
-			<img src="./img/pop-dj05.png" alt="">
-			<img src="./img/pop-dj06.png" alt="">
+			<img class="picture" src="" alt="">
+			<!-- <img src="./img/96.jpg" alt="">
+			<img src="./img/bg.jpg" alt="">
+			<img src="./img/comm3.png" alt="">
+			<img src="./img/dj02.png" alt="" >
+			<img src="./img/dj03.png"> -->
+		</div>
+		<div class="imgBox status2">
+			<!-- <img src="./img/96.jpg" alt="">
+			<img src="./img/bg.jpg" alt="">
+			<img src="./img/comm3.png" alt="">
+			<img src="./img/dj02.png" alt="" >
+			<img src="./img/dj03.png"> -->
 		</div>
 	</div>
-
-
 <!-- <script src="./js/html2canvas.js"></script>
 <script src="./js/jsPdf.debug.js"></script> -->
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.js"></script>
 <script>
-/*$('.dwonload').ontap(function(){
-	let box = $('.main'),
-	awidth = box.width(),
-	aHeight = box.height();
-	// return
-	setTimeout(function(){
-		html2canvas(document.body, {
-			useCORS:true,
-			// height:aHeight,
-			// width:awidth,
-			scale:'2',
-			dpi:'192',
-			allowTaint:false,
-			onrendered:function(canvas) {
-				var contentWidth = canvas.width;
-				var contentHeight = canvas.height;
-				var imgWidth = 595.28;
-				var imgHeight = 592.28/contentWidth * contentHeight;	
-				var pageData = canvas.toDataURL('image/jpeg', 1.0);
+	//文件夹拖拽
+	const dropBox = document.querySelector('.box');
+	dropBox.addEventListener("dragenter", function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+	}, false);
 
-                //方向默认竖直，尺寸ponits，格式a4[595.28,841.89]
-                var pdf = new jsPDF('', 'pt', 'a4');
+	dropBox.addEventListener("dragover", function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+	}, false);
 
-                //addImage后两个参数控制添加图片的尺寸，此处将页面高度按照a4纸宽高比列进行压缩
-				pdf.addImage(pageData, 'JPEG', 0, 0, imgWidth, imgHeight );
-				// var contentWidth = canvas.width;
-				// var contentHeight = canvas.height;
-				// console.log(contentWidth,contentHeight)
-				// //一页pdf显示html页面生成的canvas高度;
-				// // var pageHeight = contentWidth / 592.28 * 841.89;
-				// var pageHeight = contentWidth / 592.28 * 841.89;
-				// //未生成pdf的html页面高度
-				// var leftHeight = contentHeight;
-				// //页面偏移
-				// var position = 0;
-				// //a4纸的尺寸[595.28,841.89]，html页面生成的canvas在pdf中图片的宽高
-				// // var imgWidth = 595.28;
-				// // var imgHeight = 592.28/contentWidth * contentHeight;
-				// var imgWidth = awidth;
-				// var imgHeight = aHeight;
+	dropBox.addEventListener("dragleave", function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+	}, false);
 
-				// var pageData = canvas.toDataURL('image/jpeg', 1.0);
-				// console.log(pageData)
-
-				// var pdf = new jsPDF('landscape', 'pt',[awidth,aHeight]);
-
-				// //有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
-				// //当内容未超过pdf一页显示的范围，无需分页
-				// if (leftHeight < pageHeight) {
-				// pdf.addImage(pageData, 'JPEG', 0, 0, imgWidth, imgHeight );
-				// } else {
-				// 	while(leftHeight > 0) {
-				// 		pdf.addImage(pageData, 'JPEG', 0, position, imgWidth, imgHeight)
-				// 		leftHeight -= pageHeight;
-				// 		position -= 841.89;
-				// 		//避免添加空白页
-				// 		if(leftHeight > 0) {
-				// 			pdf.addPage();
-				// 		}
-				// 	}
-				// }
-
-				pdf.save('main.pdf');
+	dropBox.addEventListener("drop", function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+		let dtf = e.dataTransfer,
+			dropFiles = [];
+		
+		
+		//多图
+		
+		if(dtf.items !== undefined) {
+			// Chrome有items属性，对Chrome的单独处理
+			for(var i = 0; i < dtf.items.length; i++) {
+				var item = dtf.items[i];
+				// 用webkitGetAsEntry禁止上传目录
+				if(item.kind === "file" && item.webkitGetAsEntry().isFile) {//单图
+					var file = item.getAsFile();
+					$('.picture').attr('src',file ? URL.createObjectURL(file) : '');
+					dropFiles.push(file);
+				}else if(item.kind === "file" && item.webkitGetAsEntry().isDirectory){//文件夹
+					console.log(item.webkitGetAsEntry())
+					console.log(item.getAsFile())
+				}
 			}
-		})
-	},500)
+		}else{
+			for(var i = 0; i < dtf.files.length; i++) {
+				dropFiles.push(dtf.files[i]);
+			}
+		}
+		},false)
 
-})*/
-</script>
-<script>
-
+	//打包成pdf
 	$('.dwonload').click(function(){
+		$('.box').css('height',$('.imgBox').length*1705.5+'px')
 		download()
 	})
 	function download(){
@@ -147,17 +133,17 @@ button{height: 30px;width: 80px;border-radius: 15px;background-color: darkorange
 			var imgWidth = 595.28;
 			var imgHeight = 592.28/contentWidth * contentHeight;
 
-			var pageData = canvas.toDataURL('image/jpeg', 1.0);
+			var pageData = canvas.toDataURL('image/png', 1.0);
 
 			var pdf = new jsPDF('', 'pt', 'a4');
 
 			//有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
 			//当内容未超过pdf一页显示的范围，无需分页
 			if (leftHeight < pageHeight) {
-			pdf.addImage(pageData, 'JPEG', 0, 0, imgWidth, imgHeight);
+			pdf.addImage(pageData, 'png', 0, 0, imgWidth, imgHeight);
 			} else {    // 分页
 				while(leftHeight > 0) {
-					pdf.addImage(pageData, 'JPEG', 0, position, imgWidth, imgHeight)
+					pdf.addImage(pageData, 'png', 0, position, imgWidth, imgHeight)
 					leftHeight -= pageHeight;
 					position -= 841.89;
 					//避免添加空白页

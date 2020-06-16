@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <!-- <input type="file" id="image"><br/>
+    <button>上传</button> -->
+    <button>Detect</button>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+        $('button').click(function(){
+            Toother()
+        })
+        function Toother(){
+            $.ajax({
+                // url: 'http://94.191.3.171:8888',
+                url: 'http://127.0.0.2:8888',
+                type: 'post', 
+                data:{name:'五号',info:'我是五号'},
+                success: function (result) {
+                    console.log(JSON.parse(result))
+                },
+                error:function(data){ 
+                    console.log(data)
+                }
+            })
+        }
+        // var reader = new FileReader();
+        // var AllowImgFileSize = 2100000; //上传图片最大值(单位字节)（ 2 M = 2097152 B ）超过2M上传失败
+        // $('button').click(function(){
+        //     sure()
+        // })
+        // var sure = function(){
+        //     var file = $("#image")[0].files[0];
+        //     var imgUrlBase64;
+        //     if (file) {
+        //         //将文件以Data URL形式读入页面  
+        //         imgUrlBase64 = reader.readAsDataURL(file);
+        //         reader.onload = function (e) {
+        //         //var ImgFileSize = reader.result.substring(reader.result.indexOf(",") + 1).length;//截取base64码部分（可选可不选，需要与后台沟通）
+        //         if (AllowImgFileSize != 0 && AllowImgFileSize < reader.result.length) {
+        //                 alert( '上传失败，请上传不大于2M的图片！');
+        //                 return;
+        //             }else{
+        //                 //执行上传操作
+        //                 console.log(reader.result);
+        //             }
+        //         }
+        //     }
+        // }
+    
+        
+    </script>
+</body>
+</html>

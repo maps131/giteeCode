@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        ul{
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        li{
+            list-style: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="msgBox">
+        <ul>
+
+        </ul>
+    </div>
+    <div class="infoBox">
+        <p>你的大名:</p>
+        <input type="text" class="name">
+        <p>你想说啥:</p>
+        <input type="text" class="info">
+        <button>发表</button>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+        $('button').click(function(){
+            var name  = $('.name').val()
+            var info = $('.info').val()
+            Toother(name,info)
+        })
+        getInfo()
+        function getInfo(){
+            var oli = ''
+            $.ajax({
+                // url: 'http://94.191.3.171:8888', 
+                url: 'http://94.191.3.171:8888/start',
+                type: 'post', 
+                success: function (result) {
+                    result = JSON.parse(result)                 
+                    for(var i = 0 ; i < result.length ; i++){
+                        var li = '<li><span>name</span> : <span>info</span></li>'
+                        li = li.replace(/name/,result[i].name).replace(/info/,result[i].msg)
+                        oli += li
+                        
+                    }
+                    $('.msgBox ul').html(oli)
+                },
+                error:function(data){ 
+                    console.log(data)
+                }
+            })
+        }
+
+        function Toother(a,b){
+            $.ajax({
+                // url: 'http://94.191.3.171:8888', 
+                url: 'http://94.191.3.171:8888/comment',
+                type: 'post', 
+                data:{name:a,info:b},
+                success: function (result) {
+                    // console.log(JSON.parse(result))
+                    getInfo()
+                },
+                error:function(data){ 
+                    console.log(data)
+                }
+            })
+        }
+    </script>
+</body>
+</html>

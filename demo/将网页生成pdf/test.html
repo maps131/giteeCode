@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        div {
+        margin: 0em;
+        padding: 2em;
+        }
+
+        #source {
+        color: blue;
+        border: 1px solid black;
+        }
+
+        #target {
+        border: 1px solid black;
+        }
+        #source2 {
+        color: blue;
+        border: 1px solid black;
+        }
+
+        #target2 {
+        border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    
+    <div>
+        <p id="source" ondragstart="dragstart_handler(event);" draggable="true">
+            模块1
+        </p>
+    </div>
+    <div>
+        <p id="source2" ondragstart="dragstart_handler(event);" draggable="true">
+            模块2
+        </p>
+    </div>
+    <div id="target" ondrop="drop_handler(event);" ondragover="dragover_handler(event);">存放盒子</div>
+    <div id="target2" ondrop="drop_handler(event);" ondragover="dragover_handler(event);">存放盒子2</div>
+    <script>
+        function dragstart_handler(ev) {
+            // console.log("dragStart: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
+
+            // Add this element's id to the drag payload so the drop handler will
+            // know which element to add to its tree
+            ev.dataTransfer.setData("text", ev.target.id);
+            console.log(ev.target.id)
+            ev.dataTransfer.effectAllowed = "move";
+        }
+
+        function drop_handler(ev) {
+            // console.log("drop: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
+            ev.preventDefault();
+
+            // Get the id of the target and add the moved element to the target's DOM
+            console.log(ev.target.id)
+            var data = ev.dataTransfer.getData("text");
+            ev.target.appendChild(document.getElementById(data));
+        }
+
+        function dragover_handler(ev) {
+            // console.log("dragOver: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
+            ev.preventDefault();
+            // Set the dropEffect to move
+            ev.dataTransfer.dropEffect = "move"
+        }
+    </script>
+</body>
+</html>

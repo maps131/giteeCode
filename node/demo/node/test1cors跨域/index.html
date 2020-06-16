@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <button>Detect</button>
+    <script src="./../index.js"></script>
+    <script>
+        //传参，同ip不同端口返回字符串
+        var btn = document.getElementsByTagName('button')[0]
+
+        btn.onclick = function(){
+            Toother()
+        }
+
+        function Toother(){
+            //http://94.191.3.171:8888
+            // Maps131.cors({
+            //     url:'http://localhost:3000',
+            //     type:'post',
+            //     data:{
+            //         msg:'hello',
+            //         info:'success'
+            //     },
+            //     success:function(data){
+            //         console.log(data)
+            //     }
+            // })
+
+            var data = {
+                url:'http://localhost:3000',
+                type:'post',
+                data:{
+                    msg:'hello',
+                    info:'success'
+                }
+            }
+            Maps131.promiseCors(data)
+                .then(function(data){
+                    console.log(JSON.parse(data))
+                    return Maps131.promiseCors({
+                        url:'http://localhost:3000',
+                        type:'post',
+                        data:{
+                            msg:'hi',
+                            info:'success'
+                        }
+                    })
+                }).then(function(data){
+                    console.log(JSON.parse(data))
+                })
+        }
+    </script>
+</body>
+</html>
